@@ -1,0 +1,16 @@
+from abc import ABC, abstractmethod
+from typing import List, Optional
+from app.domain.entities.WeatherForecast import WeatherForecast
+
+
+class IWeatherForecastRepository(ABC):
+    @abstractmethod
+    async def GetAll(self) -> List[WeatherForecast]: ...
+    @abstractmethod
+    async def GetById(self, id: int) -> Optional[WeatherForecast]: ...
+    @abstractmethod
+    async def Add(self, entity: WeatherForecast) -> WeatherForecast: ...
+    @abstractmethod
+    async def Update(self, entity: WeatherForecast) -> WeatherForecast: ...
+    @abstractmethod
+    async def Delete(self, id: int) -> None: ...

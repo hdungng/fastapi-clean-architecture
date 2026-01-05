@@ -1,0 +1,16 @@
+from abc import ABC, abstractmethod
+from typing import List, Optional
+from app.application.dtos.WeatherForecastDto import WeatherForecastDto
+
+
+class IWeatherForecastService(ABC):
+    @abstractmethod
+    async def GetAll(self) -> List[WeatherForecastDto]: ...
+    @abstractmethod
+    async def GetById(self, id: int) -> Optional[WeatherForecastDto]: ...
+    @abstractmethod
+    async def Create(self, dto: WeatherForecastDto) -> WeatherForecastDto: ...
+    @abstractmethod
+    async def Update(self, id: int, dto: WeatherForecastDto) -> WeatherForecastDto: ...
+    @abstractmethod
+    async def Delete(self, id: int) -> None: ...
