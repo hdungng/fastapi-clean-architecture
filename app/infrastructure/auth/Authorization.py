@@ -1,10 +1,11 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List
 
 from fastapi import Depends, HTTPException, status
 
-from app.infrastructure.auth.Dependencies import GetCurrentUser
+from app.infrastructure.auth.Dependencies import GetCurrentUser, GetUnitOfWork
 from app.application.dtos.UserDto import UserDto
+from app.domain.repositories.IUnitOfWork import IUnitOfWork
 
 
 @dataclass
@@ -12,17 +13,14 @@ class UserPrincipal:
     Id: int
     UserName: str
     Roles: List[str]
-    Permissions: List[str]
 
 
-def BuildPrincipal(user: UserDto) -> UserPrincipal:
-    roles = user.Roles or []
-    permissions = user.Permissions or []
+def BuildPrincipal(user: UserDto, roles: List[str] | None = None) -> UserPrincipal:
+    resolved_roles = roles or user.Roles or []
     return UserPrincipal(
         Id=user.Id or 0,
         UserName=user.UserName,
-        Roles=roles,
-        Permissions=permissions,
+        Roles=resolved_roles,
     )
 
 
@@ -32,8 +30,12 @@ def RequireRoles(*required_roles: str):
     - Giống [Authorize(Roles = "Admin,Manager")] trong ASP.NET Core.
     """
 
-    async def dependency(user: UserDto = Depends(GetCurrentUser)) -> UserPrincipal:
-        principal = BuildPrincipal(user)
+    async def dependency(
+        user: UserDto = Depends(GetCurrentUser),
+        uow: IUnitOfWork = Depends(GetUnitOfWork),
+    ) -> UserPrincipal:
+        roles = await uow.Roles.GetRolesByUser(user.Id)
+        principal = BuildPrincipal(user, roles=[r.Name for r in roles])
         if required_roles:
             user_roles = set(principal.Roles)
             expected = set(required_roles)
@@ -56,13 +58,22 @@ def RequirePermissions(*required_permissions: str, enforce: bool = True):
       (dùng khi permission chỉ áp dụng conditionally trong business logic).
     """
 
-    async def dependency(user: UserDto = Depends(GetCurrentUser)) -> UserPrincipal:
-        principal = BuildPrincipal(user)
+    async def dependency(
+        user: UserDto = Depends(GetCurrentUser),
+        uow: IUnitOfWork = Depends(GetUnitOfWork),
+    ) -> UserPrincipal:
+        roles = await uow.Roles.GetRolesByUser(user.Id)
+        principal = BuildPrincipal(user, roles=[r.Name for r in roles])
         if not required_permissions or not enforce:
             # Không bắt buộc, chỉ trả về principal để service tự xử lý tiếp.
             return principal
 
-        user_permissions = set(principal.Permissions)
+        perm_names: set[str] = set()
+        for role in roles:
+            perms = await uow.Permissions.GetPermissionsByRole(role.Id)
+            for perm in perms:
+                perm_names.add(perm.Name)
+        user_permissions = perm_names
         missing = [p for p in required_permissions if p not in user_permissions]
 
         if missing:

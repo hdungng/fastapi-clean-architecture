@@ -30,14 +30,12 @@ class AuthService(IAuthService):
             )
 
         roles = user.Roles or []
-        permissions = user.Permissions or []
 
         access_token = CreateAccessToken(
             {
                 "sub": str(user.Id),
                 "username": user.UserName,
                 "roles": roles,
-                "permissions": permissions,
             }
         )
 
@@ -83,14 +81,12 @@ class AuthService(IAuthService):
             )
 
         roles = user.Roles or []
-        permissions = user.Permissions or []
 
         access_token = CreateAccessToken(
             {
                 "sub": str(user.Id),
                 "username": user.UserName,
                 "roles": roles,
-                "permissions": permissions,
             }
         )
 
