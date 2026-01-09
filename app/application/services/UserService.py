@@ -106,7 +106,6 @@ class UserService(IUserService):
 
         - Clear toàn bộ roles cũ
         - Gán danh sách roles mới theo tên
-        - Rebuild cache Roles/Permissions trên User
         """
         roles = await self._unit_of_work.Roles.GetByNames(role_names)
         if len(roles) != len(set(role_names)):
@@ -119,19 +118,11 @@ class UserService(IUserService):
         for r in roles:
             await self._unit_of_work.Roles.AssignRoleToUser(user_id=user_id, role_id=r.Id)
 
-        # Build permissions from roles
-        perm_names: set[str] = set()
-        for r in roles:
-            perms = await self._unit_of_work.Permissions.GetPermissionsByRole(r.Id)
-            for p in perms:
-                perm_names.add(p.Name)
-
         # Update cache on User entity
         entity = await self._unit_of_work.Users.GetById(user_id)
         if entity is None:
             raise ValueError("User not found when updating own roles")
         entity.Roles = [r.Name for r in roles]
-        entity.Permissions = sorted(perm_names)
 
         await self._unit_of_work.Users.Update(entity)
         await self._unit_of_work.SaveChanges()
@@ -157,4 +148,3 @@ class UserService(IUserService):
         entity.PasswordHash = HashPassword(new_password)
         await self._unit_of_work.Users.Update(entity)
         await self._unit_of_work.SaveChanges()
-
