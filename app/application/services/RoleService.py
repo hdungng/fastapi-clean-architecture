@@ -29,7 +29,7 @@ class RoleService(IRoleService):
 
     async def Update(self, id: int, dto: RoleDto) -> RoleDto:
         entity = MapperInstance.Map(dto, Role)
-        entity.Id = id
+        entity.id = id
         updated = await self._unit_of_work.Roles.Update(entity)
         await self._unit_of_work.SaveChanges()
         return MapperInstance.Map(updated, RoleDto)

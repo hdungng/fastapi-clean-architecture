@@ -4,7 +4,7 @@ from datetime import date
 
 @dataclass
 class WeatherForecast:
-    Id: int | None
-    Date: date
-    TemperatureC: int
-    Summary: str | None = None
+    id: int | None
+    date: date
+    temperature_c: int
+    summary: str | None = None

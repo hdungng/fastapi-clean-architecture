@@ -59,7 +59,7 @@ async def GetUsers(
     Query:
     - page, pageSize: phân trang
     - sortBy, sortDir: sắp xếp
-    - search: tìm kiếm theo UserName, Email, FullName
+    - search: tìm kiếm theo user_name, email, full_name
     - isActive: filter theo trạng thái hoạt động
 
     Returns:
@@ -119,10 +119,10 @@ async def Create(
     Returns:
     - 201: ApiResponse[UserDto]
     """
-    if dto.Id is not None:
-        return BadRequest("Id must be null when creating a new user")
+    if dto.id is not None:
+        return BadRequest("id must be null when creating a new user")
     created = await service.Create(dto)
-    location = f"/api/users/{created.Id}"
+    location = f"/api/users/{created.id}"
     return Created(location, created)
 
 
@@ -179,7 +179,7 @@ async def GetMe(
     Summary:
     - Lấy thông tin profile của chính user đang đăng nhập.
     """
-    profile = await service.GetCurrentUserProfile(current_user.Id)
+    profile = await service.GetCurrentUserProfile(current_user.id)
     if not profile:
         return NotFound("User not found")
     return Ok(profile)
@@ -196,7 +196,7 @@ async def GetMyRoles(
     Summary:
     - Lấy danh sách role name của chính user.
     """
-    roles: List[str] = await service.GetCurrentUserRoles(current_user.Id)
+    roles: List[str] = await service.GetCurrentUserRoles(current_user.id)
     return Ok(roles)
 
 
@@ -211,7 +211,7 @@ async def GetMyPermissions(
     Summary:
     - Lấy danh sách permission name hiệu lực (từ tất cả roles của user).
     """
-    perms: List[str] = await service.GetCurrentUserPermissions(current_user.Id)
+    perms: List[str] = await service.GetCurrentUserPermissions(current_user.id)
     return Ok(perms)
 
 
@@ -231,10 +231,10 @@ async def UpdateMyRoles(
     - Permission bắt buộc: Users.Self.ManageRoles
 
     Body:
-    - { "Roles": ["Admin", "User"] }
+    - { "roles": ["Admin", "User"] }
     """
     try:
-        updated = await service.UpdateCurrentUserRoles(principal.Id, request.Roles)
+        updated = await service.UpdateCurrentUserRoles(principal.id, request.roles)
     except ValueError as ex:
         return BadRequest(str(ex))
     return Ok(updated)
@@ -252,20 +252,19 @@ async def ChangeMyPassword(
     - Đổi mật khẩu cho chính user.
 
     Body:
-    - CurrentPassword: mật khẩu hiện tại
-    - NewPassword: mật khẩu mới
+    - current_password: mật khẩu hiện tại
+    - new_password: mật khẩu mới
 
     Rules:
-    - Bắt buộc đúng CurrentPassword
+    - Bắt buộc đúng current_password
     - Không yêu cầu permission đặc biệt, chỉ cần user đã đăng nhập
     """
     try:
         await service.ChangePassword(
-            user_id=current_user.Id,
-            current_password=request.CurrentPassword,
-            new_password=request.NewPassword,
+            user_id=current_user.id,
+            current_password=request.current_password,
+            new_password=request.new_password,
         )
     except ValueError as ex:
         return BadRequest(str(ex))
     return Ok({"message": "Password changed successfully"})
-

@@ -91,10 +91,10 @@ async def CreateProduct(
     Returns:
     - 201: ApiResponse[ProductDto]
     """
-    if dto.Id is not None:
-        return BadRequest("Id must be null when creating a new product")
+    if dto.id is not None:
+        return BadRequest("id must be null when creating a new product")
     created = await service.Create(dto)
-    location = f"/api/products/{created.Id}"
+    location = f"/api/products/{created.id}"
     return Created(location, created)
 
 

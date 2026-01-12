@@ -58,10 +58,10 @@ async def CreateRole(
     service: IRoleService = Depends(GetService),
     principal: UserPrincipal = Depends(RequireRoles("Admin")),
 ):
-    if dto.Id is not None:
-        return BadRequest("Id must be null when creating a new role")
+    if dto.id is not None:
+        return BadRequest("id must be null when creating a new role")
     created = await service.Create(dto)
-    location = f"/api/roles/{created.Id}"
+    location = f"/api/roles/{created.id}"
     return Created(location, created)
 
 

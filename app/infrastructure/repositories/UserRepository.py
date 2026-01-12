@@ -16,11 +16,11 @@ class UserRepository(IUserRepository):
         return [self._MapToEntity(r) for r in rows]
 
     async def GetById(self, id: int) -> Optional[User]:
-        row = self._session.query(UserModel).filter(UserModel.Id == id).first()
+        row = self._session.query(UserModel).filter(UserModel.id == id).first()
         return self._MapToEntity(row) if row else None
 
     async def GetByUserName(self, user_name: str) -> Optional[User]:
-        row = self._session.query(UserModel).filter(UserModel.UserName == user_name).first()
+        row = self._session.query(UserModel).filter(UserModel.user_name == user_name).first()
         print(row)
         return self._MapToEntity(row) if row else None
 
@@ -36,32 +36,32 @@ class UserRepository(IUserRepository):
         query = self._session.query(UserModel)
 
         if is_active is not None:
-            query = query.filter(UserModel.IsActive == is_active)
+            query = query.filter(UserModel.is_active == is_active)
 
         if search:
             like_pattern = f"%{search}%"
             query = query.filter(
                 or_(
-                    UserModel.UserName.ilike(like_pattern),
-                    UserModel.Email.ilike(like_pattern),
-                    UserModel.FullName.ilike(like_pattern),
+                    UserModel.user_name.ilike(like_pattern),
+                    UserModel.email.ilike(like_pattern),
+                    UserModel.full_name.ilike(like_pattern),
                 )
             )
 
-        sort_by = (sort_by or "Id").capitalize()
+        sort_key = (sort_by or "id").lower()
         sort_dir = (sort_dir or "asc").lower()
 
         sort_map = {
-            "Id": UserModel.Id,
-            "Username": UserModel.UserName,
-            "UserName": UserModel.UserName,
-            "Email": UserModel.Email,
-            "Fullname": UserModel.FullName,
-            "FullName": UserModel.FullName,
-            "Isactive": UserModel.IsActive,
-            "IsActive": UserModel.IsActive,
+            "id": UserModel.id,
+            "username": UserModel.user_name,
+            "user_name": UserModel.user_name,
+            "email": UserModel.email,
+            "fullname": UserModel.full_name,
+            "full_name": UserModel.full_name,
+            "isactive": UserModel.is_active,
+            "is_active": UserModel.is_active,
         }
-        sort_column = sort_map.get(sort_by, UserModel.Id)
+        sort_column = sort_map.get(sort_key, UserModel.id)
 
         if sort_dir == "desc":
             query = query.order_by(desc(sort_column))
@@ -82,48 +82,48 @@ class UserRepository(IUserRepository):
         row = self._MapToModel(entity)
         self._session.add(row)
         self._session.flush()
-        entity.Id = row.Id
+        entity.id = row.id
         return entity
 
     async def Update(self, entity: User) -> User:
-        row = self._session.query(UserModel).filter(UserModel.Id == entity.Id).first()
+        row = self._session.query(UserModel).filter(UserModel.id == entity.id).first()
         if not row:
             raise KeyError("User not found")
-        row.UserName = entity.UserName
-        row.Email = entity.Email
-        row.FullName = entity.FullName
-        row.IsActive = entity.IsActive
-        row.PasswordHash = entity.PasswordHash
-        row.Roles = self._Join(entity.Roles)
+        row.user_name = entity.user_name
+        row.email = entity.email
+        row.full_name = entity.full_name
+        row.is_active = entity.is_active
+        row.password_hash = entity.password_hash
+        row.roles = self._Join(entity.roles)
         self._session.flush()
         return entity
 
     async def Delete(self, id: int) -> None:
-        row = self._session.query(UserModel).filter(UserModel.Id == id).first()
+        row = self._session.query(UserModel).filter(UserModel.id == id).first()
         if row:
             self._session.delete(row)
             self._session.flush()
 
     def _MapToEntity(self, row: UserModel) -> User:
         return User(
-            Id=row.Id,
-            UserName=row.UserName,
-            Email=row.Email,
-            FullName=row.FullName,
-            IsActive=row.IsActive,
-            PasswordHash=row.PasswordHash,
-            Roles=self._Split(row.Roles),
+            id=row.id,
+            user_name=row.user_name,
+            email=row.email,
+            full_name=row.full_name,
+            is_active=row.is_active,
+            password_hash=row.password_hash,
+            roles=self._Split(row.roles),
         )
 
     def _MapToModel(self, entity: User) -> UserModel:
         return UserModel(
-            Id=entity.Id,
-            UserName=entity.UserName,
-            Email=entity.Email,
-            FullName=entity.FullName,
-            IsActive=entity.IsActive,
-            PasswordHash=entity.PasswordHash,
-            Roles=self._Join(entity.Roles),
+            id=entity.id,
+            user_name=entity.user_name,
+            email=entity.email,
+            full_name=entity.full_name,
+            is_active=entity.is_active,
+            password_hash=entity.password_hash,
+            roles=self._Join(entity.roles),
         )
 
     def _Split(self, value: str | None) -> list[str] | None:

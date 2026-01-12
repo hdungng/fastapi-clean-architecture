@@ -6,7 +6,7 @@ from app.infrastructure.db.audit_mixin import AuditMixin
 class WeatherForecastModel(AuditMixin, Base):
     __tablename__ = "WeatherForecasts"
 
-    Id = Column(Integer, primary_key=True, index=True)
-    Date = Column(Date, nullable=False)
-    TemperatureC = Column(Integer, nullable=False)
-    Summary = Column(String(256), nullable=True)
+    id = Column("Id", Integer, primary_key=True, index=True)
+    date = Column("Date", Date, nullable=False)
+    temperature_c = Column("TemperatureC", Integer, nullable=False)
+    summary = Column("Summary", String(256), nullable=True)

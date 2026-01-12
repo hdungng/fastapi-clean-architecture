@@ -29,7 +29,7 @@ class ProductService(IProductService):
 
     async def Update(self, id: int, dto: ProductDto) -> ProductDto:
         entity = MapperInstance.Map(dto, Product)
-        entity.Id = id
+        entity.id = id
         updated = await self._unit_of_work.Products.Update(entity)
         await self._unit_of_work.SaveChanges()
         return MapperInstance.Map(updated, ProductDto)

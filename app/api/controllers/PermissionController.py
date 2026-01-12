@@ -58,10 +58,10 @@ async def CreatePermission(
     service: IPermissionService = Depends(GetService),
     principal: UserPrincipal = Depends(RequireRoles("Admin")),
 ):
-    if dto.Id is not None:
-        return BadRequest("Id must be null when creating a new permission")
+    if dto.id is not None:
+        return BadRequest("id must be null when creating a new permission")
     created = await service.Create(dto)
-    location = f"/api/permissions/{created.Id}"
+    location = f"/api/permissions/{created.id}"
     return Created(location, created)
 
 

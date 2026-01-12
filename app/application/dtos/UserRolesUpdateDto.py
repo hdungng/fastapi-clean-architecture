@@ -3,4 +3,4 @@ from pydantic import BaseModel
 
 
 class UserRolesUpdateDto(BaseModel):
-    Roles: List[str]
+    roles: List[str]

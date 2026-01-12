@@ -10,17 +10,17 @@ from app.domain.repositories.IUnitOfWork import IUnitOfWork
 
 @dataclass
 class UserPrincipal:
-    Id: int
-    UserName: str
-    Roles: List[str]
+    id: int
+    user_name: str
+    roles: List[str]
 
 
 def BuildPrincipal(user: UserDto, roles: List[str] | None = None) -> UserPrincipal:
-    resolved_roles = roles or user.Roles or []
+    resolved_roles = roles or user.roles or []
     return UserPrincipal(
-        Id=user.Id or 0,
-        UserName=user.UserName,
-        Roles=resolved_roles,
+        id=user.id or 0,
+        user_name=user.user_name,
+        roles=resolved_roles,
     )
 
 
@@ -34,10 +34,10 @@ def RequireRoles(*required_roles: str):
         user: UserDto = Depends(GetCurrentUser),
         uow: IUnitOfWork = Depends(GetUnitOfWork),
     ) -> UserPrincipal:
-        roles = await uow.Roles.GetRolesByUser(user.Id)
-        principal = BuildPrincipal(user, roles=[r.Name for r in roles])
+        roles = await uow.Roles.GetRolesByUser(user.id)
+        principal = BuildPrincipal(user, roles=[r.name for r in roles])
         if required_roles:
-            user_roles = set(principal.Roles)
+            user_roles = set(principal.roles)
             expected = set(required_roles)
             if user_roles.isdisjoint(expected):
                 raise HTTPException(
@@ -62,17 +62,17 @@ def RequirePermissions(*required_permissions: str, enforce: bool = True):
         user: UserDto = Depends(GetCurrentUser),
         uow: IUnitOfWork = Depends(GetUnitOfWork),
     ) -> UserPrincipal:
-        roles = await uow.Roles.GetRolesByUser(user.Id)
-        principal = BuildPrincipal(user, roles=[r.Name for r in roles])
+        roles = await uow.Roles.GetRolesByUser(user.id)
+        principal = BuildPrincipal(user, roles=[r.name for r in roles])
         if not required_permissions or not enforce:
             # Không bắt buộc, chỉ trả về principal để service tự xử lý tiếp.
             return principal
 
         perm_names: set[str] = set()
         for role in roles:
-            perms = await uow.Permissions.GetPermissionsByRole(role.Id)
+            perms = await uow.Permissions.GetPermissionsByRole(role.id)
             for perm in perms:
-                perm_names.add(perm.Name)
+                perm_names.add(perm.name)
         user_permissions = perm_names
         missing = [p for p in required_permissions if p not in user_permissions]
 

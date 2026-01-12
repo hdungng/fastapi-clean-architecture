@@ -16,38 +16,38 @@ class RoleRepository(IRoleRepository):
         return [self._MapToEntity(r) for r in rows]
 
     async def GetById(self, id: int) -> Optional[Role]:
-        row = self._session.query(RoleModel).filter(RoleModel.Id == id).first()
+        row = self._session.query(RoleModel).filter(RoleModel.id == id).first()
         return self._MapToEntity(row) if row else None
 
     async def GetByName(self, name: str) -> Optional[Role]:
-        row = self._session.query(RoleModel).filter(RoleModel.Name == name).first()
+        row = self._session.query(RoleModel).filter(RoleModel.name == name).first()
         return self._MapToEntity(row) if row else None
 
     async def GetByNames(self, names: List[str]) -> List[Role]:
         if not names:
             return []
-        rows = self._session.query(RoleModel).filter(RoleModel.Name.in_(names)).all()
+        rows = self._session.query(RoleModel).filter(RoleModel.name.in_(names)).all()
         return [self._MapToEntity(r) for r in rows]
 
     async def Add(self, entity: Role) -> Role:
         row = self._MapToModel(entity)
         self._session.add(row)
         self._session.flush()
-        entity.Id = row.Id
+        entity.id = row.id
         return entity
 
     async def Update(self, entity: Role) -> Role:
-        row = self._session.query(RoleModel).filter(RoleModel.Id == entity.Id).first()
+        row = self._session.query(RoleModel).filter(RoleModel.id == entity.id).first()
         if not row:
             raise KeyError("Role not found")
-        row.Name = entity.Name
-        row.Description = entity.Description
-        row.IsActive = entity.IsActive
+        row.name = entity.name
+        row.description = entity.description
+        row.is_active = entity.is_active
         self._session.flush()
         return entity
 
     async def Delete(self, id: int) -> None:
-        row = self._session.query(RoleModel).filter(RoleModel.Id == id).first()
+        row = self._session.query(RoleModel).filter(RoleModel.id == id).first()
         if row:
             self._session.delete(row)
             self._session.flush()
@@ -55,19 +55,19 @@ class RoleRepository(IRoleRepository):
     async def AssignRoleToUser(self, user_id: int, role_id: int) -> None:
         existing = (
             self._session.query(UserRoleModel)
-            .filter(UserRoleModel.UserId == user_id, UserRoleModel.RoleId == role_id)
+            .filter(UserRoleModel.user_id == user_id, UserRoleModel.role_id == role_id)
             .first()
         )
         if existing:
             return
-        link = UserRoleModel(UserId=user_id, RoleId=role_id)
+        link = UserRoleModel(user_id=user_id, role_id=role_id)
         self._session.add(link)
         self._session.flush()
 
     async def RemoveRoleFromUser(self, user_id: int, role_id: int) -> None:
         link = (
             self._session.query(UserRoleModel)
-            .filter(UserRoleModel.UserId == user_id, UserRoleModel.RoleId == role_id)
+            .filter(UserRoleModel.user_id == user_id, UserRoleModel.role_id == role_id)
             .first()
         )
         if link:
@@ -75,30 +75,30 @@ class RoleRepository(IRoleRepository):
             self._session.flush()
 
     async def ClearRolesForUser(self, user_id: int) -> None:
-        self._session.query(UserRoleModel).filter(UserRoleModel.UserId == user_id).delete()
+        self._session.query(UserRoleModel).filter(UserRoleModel.user_id == user_id).delete()
         self._session.flush()
 
     async def GetRolesByUser(self, user_id: int) -> List[Role]:
         joins = (
             self._session.query(RoleModel)
-            .join(UserRoleModel, UserRoleModel.RoleId == RoleModel.Id)
-            .filter(UserRoleModel.UserId == user_id)
+            .join(UserRoleModel, UserRoleModel.role_id == RoleModel.id)
+            .filter(UserRoleModel.user_id == user_id)
             .all()
         )
         return [self._MapToEntity(r) for r in joins]
 
     def _MapToEntity(self, row: RoleModel) -> Role:
         return Role(
-            Id=row.Id,
-            Name=row.Name,
-            Description=row.Description,
-            IsActive=row.IsActive,
+            id=row.id,
+            name=row.name,
+            description=row.description,
+            is_active=row.is_active,
         )
 
     def _MapToModel(self, entity: Role) -> RoleModel:
         return RoleModel(
-            Id=entity.Id,
-            Name=entity.Name,
-            Description=entity.Description,
-            IsActive=entity.IsActive,
+            id=entity.id,
+            name=entity.name,
+            description=entity.description,
+            is_active=entity.is_active,
         )

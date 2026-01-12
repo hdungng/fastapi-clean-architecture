@@ -39,7 +39,7 @@ class WeatherForecastService(IWeatherForecastService):
     async def Update(self, id: int, dto: WeatherForecastDto) -> WeatherForecastDto:
         """Cập nhật WeatherForecast (Id lấy từ route, data từ DTO)."""
         entity = MapperInstance.Map(dto, WeatherForecast)
-        entity.Id = id
+        entity.id = id
         updated = await self._unit_of_work.WeatherForecasts.Update(entity)
         await self._unit_of_work.SaveChanges()
         return MapperInstance.Map(updated, WeatherForecastDto)

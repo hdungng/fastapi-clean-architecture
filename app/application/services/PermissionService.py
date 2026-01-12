@@ -29,7 +29,7 @@ class PermissionService(IPermissionService):
 
     async def Update(self, id: int, dto: PermissionDto) -> PermissionDto:
         entity = MapperInstance.Map(dto, Permission)
-        entity.Id = id
+        entity.id = id
         updated = await self._unit_of_work.Permissions.Update(entity)
         await self._unit_of_work.SaveChanges()
         return MapperInstance.Map(updated, PermissionDto)

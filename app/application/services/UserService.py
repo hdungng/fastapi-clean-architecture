@@ -66,7 +66,7 @@ class UserService(IUserService):
     async def Update(self, id: int, dto: UserDto) -> UserDto:
         """Cập nhật thông tin user theo Id."""
         entity = MapperInstance.Map(dto, User)
-        entity.Id = id
+        entity.id = id
         updated = await self._unit_of_work.Users.Update(entity)
         await self._unit_of_work.SaveChanges()
         return MapperInstance.Map(updated, UserDto)
@@ -85,7 +85,7 @@ class UserService(IUserService):
     async def GetCurrentUserRoles(self, user_id: int) -> List[str]:
         """Lấy danh sách role name của chính user."""
         roles = await self._unit_of_work.Roles.GetRolesByUser(user_id)
-        return [r.Name for r in roles]
+        return [r.name for r in roles]
 
     async def GetCurrentUserPermissions(self, user_id: int) -> List[str]:
         """
@@ -95,9 +95,9 @@ class UserService(IUserService):
         roles = await self._unit_of_work.Roles.GetRolesByUser(user_id)
         perm_names: set[str] = set()
         for r in roles:
-            perms = await self._unit_of_work.Permissions.GetPermissionsByRole(r.Id)
+            perms = await self._unit_of_work.Permissions.GetPermissionsByRole(r.id)
             for p in perms:
-                perm_names.add(p.Name)
+                perm_names.add(p.name)
         return sorted(perm_names)
 
     async def UpdateCurrentUserRoles(self, user_id: int, role_names: List[str]) -> UserDto:
@@ -110,19 +110,19 @@ class UserService(IUserService):
         roles = await self._unit_of_work.Roles.GetByNames(role_names)
         if len(roles) != len(set(role_names)):
             # Có tên role không tồn tại
-            missing = set(role_names) - {r.Name for r in roles}
+            missing = set(role_names) - {r.name for r in roles}
             raise ValueError(f"Some roles not found: {', '.join(sorted(missing))}")
 
         # Clear & assign
         await self._unit_of_work.Roles.ClearRolesForUser(user_id)
         for r in roles:
-            await self._unit_of_work.Roles.AssignRoleToUser(user_id=user_id, role_id=r.Id)
+            await self._unit_of_work.Roles.AssignRoleToUser(user_id=user_id, role_id=r.id)
 
         # Update cache on User entity
         entity = await self._unit_of_work.Users.GetById(user_id)
         if entity is None:
             raise ValueError("User not found when updating own roles")
-        entity.Roles = [r.Name for r in roles]
+        entity.roles = [r.name for r in roles]
 
         await self._unit_of_work.Users.Update(entity)
         await self._unit_of_work.SaveChanges()
@@ -133,7 +133,7 @@ class UserService(IUserService):
         """
         Đổi mật khẩu cho user:
 
-        - Kiểm tra current_password khớp với PasswordHash hiện tại
+        - Kiểm tra current_password khớp với password_hash hiện tại
         - Hash new_password và lưu vào DB
         """
         from app.infrastructure.auth.PasswordHasher import VerifyPassword, HashPassword
@@ -142,9 +142,9 @@ class UserService(IUserService):
         if entity is None:
             raise ValueError("User not found")
 
-        if not entity.PasswordHash or not VerifyPassword(current_password, entity.PasswordHash):
+        if not entity.password_hash or not VerifyPassword(current_password, entity.password_hash):
             raise ValueError("Current password is incorrect")
 
-        entity.PasswordHash = HashPassword(new_password)
+        entity.password_hash = HashPassword(new_password)
         await self._unit_of_work.Users.Update(entity)
         await self._unit_of_work.SaveChanges()
