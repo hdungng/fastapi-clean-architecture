@@ -20,40 +20,40 @@ class AuthService(IAuthService):
         self._unit_of_work = unit_of_work
 
     async def Login(self, request: LoginRequestDto) -> TokenResponseDto:
-        user = await self._unit_of_work.Users.GetByUserName(request.UserName)
+        user = await self._unit_of_work.Users.GetByUserName(request.user_name)
 
-        if user is None or not VerifyPassword(request.Password, user.PasswordHash):
+        if user is None or not VerifyPassword(request.password, user.password_hash):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid username or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        roles = user.Roles or []
+        roles = user.roles or []
 
         access_token = CreateAccessToken(
             {
-                "sub": str(user.Id),
-                "username": user.UserName,
+                "sub": str(user.id),
+                "username": user.user_name,
                 "roles": roles,
             }
         )
 
         refresh_token_str: str | None = None
         if _settings.ENABLE_REFRESH_TOKEN:
-            refresh_token_str = await self._IssueRefreshToken(user.Id)
+            refresh_token_str = await self._IssueRefreshToken(user.id)
 
-        return TokenResponseDto(AccessToken=access_token, RefreshToken=refresh_token_str)
+        return TokenResponseDto(access_token=access_token, refresh_token=refresh_token_str)
 
     async def _IssueRefreshToken(self, user_id: int) -> str:
         token = secrets.token_urlsafe(64)
         expires = datetime.utcnow() + timedelta(days=_settings.REFRESH_TOKEN_EXPIRE_DAYS)
 
         entity = RefreshToken(
-            Id=None,
-            UserId=user_id,
-            Token=token,
-            ExpiresAt=expires,
+            id=None,
+            user_id=user_id,
+            token=token,
+            expires_at=expires,
         )
         await self._unit_of_work.RefreshTokens.Add(entity)
         await self._unit_of_work.SaveChanges()
@@ -67,36 +67,36 @@ class AuthService(IAuthService):
             )
 
         existing = await self._unit_of_work.RefreshTokens.GetByToken(refresh_token)
-        if existing is None or existing.IsRevoked or existing.ExpiresAt <= datetime.utcnow():
+        if existing is None or existing.is_revoked or existing.expires_at <= datetime.utcnow():
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid or expired refresh token",
             )
 
-        user = await self._unit_of_work.Users.GetById(existing.UserId)
+        user = await self._unit_of_work.Users.GetById(existing.user_id)
         if user is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="User for this token no longer exists",
             )
 
-        roles = user.Roles or []
+        roles = user.roles or []
 
         access_token = CreateAccessToken(
             {
-                "sub": str(user.Id),
-                "username": user.UserName,
+                "sub": str(user.id),
+                "username": user.user_name,
                 "roles": roles,
             }
         )
 
         # Optionally: rotate refresh token
-        new_refresh_token = await self._IssueRefreshToken(user.Id)
-        existing.IsRevoked = True
+        new_refresh_token = await self._IssueRefreshToken(user.id)
+        existing.is_revoked = True
         await self._unit_of_work.RefreshTokens.Revoke(existing)
         await self._unit_of_work.SaveChanges()
 
-        return TokenResponseDto(AccessToken=access_token, RefreshToken=new_refresh_token)
+        return TokenResponseDto(access_token=access_token, refresh_token=new_refresh_token)
 
     async def RevokeRefreshToken(self, refresh_token: str) -> None:
         existing = await self._unit_of_work.RefreshTokens.GetByToken(refresh_token)

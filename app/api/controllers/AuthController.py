@@ -23,7 +23,7 @@ async def Login(request: LoginRequestDto, service: IAuthService = Depends(GetAut
     """
     POST /api/auth/login
 
-    - Đăng nhập, trả về AccessToken + (nếu bật) RefreshToken.
+    - Đăng nhập, trả về access_token + (nếu bật) refresh_token.
     """
     token: TokenResponseDto = await service.Login(request)
     return Ok(token)
@@ -59,11 +59,11 @@ async def RevokeRefreshToken(refreshToken: str, service: IAuthService = Depends(
 async def Token(form_data: OAuth2PasswordRequestForm = Depends(),
                 service: IAuthService = Depends(GetAuthService)):
     # map form -> DTO của bạn
-    dto = LoginRequestDto(username=form_data.username, password=form_data.password)
+    dto = LoginRequestDto(user_name=form_data.username, password=form_data.password)
 
     token: TokenResponseDto = await service.Login(dto)
 
     # Swagger yêu cầu đúng keys này
     return {"access_token": token.access_token, "token_type": "bearer"}
     # nếu DTO bạn đặt tên khác (AccessToken), đổi lại cho đúng:
-    # return {"access_token": token.AccessToken, "token_type": "bearer"}
+    # return {"access_token": token.access_token, "token_type": "bearer"}

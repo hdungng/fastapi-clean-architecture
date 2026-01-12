@@ -16,32 +16,32 @@ class PermissionRepository(IPermissionRepository):
         return [self._MapToEntity(r) for r in rows]
 
     async def GetById(self, id: int) -> Optional[Permission]:
-        row = self._session.query(PermissionModel).filter(PermissionModel.Id == id).first()
+        row = self._session.query(PermissionModel).filter(PermissionModel.id == id).first()
         return self._MapToEntity(row) if row else None
 
     async def GetByName(self, name: str) -> Optional[Permission]:
-        row = self._session.query(PermissionModel).filter(PermissionModel.Name == name).first()
+        row = self._session.query(PermissionModel).filter(PermissionModel.name == name).first()
         return self._MapToEntity(row) if row else None
 
     async def Add(self, entity: Permission) -> Permission:
         row = self._MapToModel(entity)
         self._session.add(row)
         self._session.flush()
-        entity.Id = row.Id
+        entity.id = row.id
         return entity
 
     async def Update(self, entity: Permission) -> Permission:
-        row = self._session.query(PermissionModel).filter(PermissionModel.Id == entity.Id).first()
+        row = self._session.query(PermissionModel).filter(PermissionModel.id == entity.id).first()
         if not row:
             raise KeyError("Permission not found")
-        row.Name = entity.Name
-        row.Description = entity.Description
-        row.IsActive = entity.IsActive
+        row.name = entity.name
+        row.description = entity.description
+        row.is_active = entity.is_active
         self._session.flush()
         return entity
 
     async def Delete(self, id: int) -> None:
-        row = self._session.query(PermissionModel).filter(PermissionModel.Id == id).first()
+        row = self._session.query(PermissionModel).filter(PermissionModel.id == id).first()
         if row:
             self._session.delete(row)
             self._session.flush()
@@ -49,19 +49,19 @@ class PermissionRepository(IPermissionRepository):
     async def AssignPermissionToRole(self, permission_id: int, role_id: int) -> None:
         existing = (
             self._session.query(RolePermissionModel)
-            .filter(RolePermissionModel.RoleId == role_id, RolePermissionModel.PermissionId == permission_id)
+            .filter(RolePermissionModel.role_id == role_id, RolePermissionModel.permission_id == permission_id)
             .first()
         )
         if existing:
             return
-        link = RolePermissionModel(RoleId=role_id, PermissionId=permission_id)
+        link = RolePermissionModel(role_id=role_id, permission_id=permission_id)
         self._session.add(link)
         self._session.flush()
 
     async def RemovePermissionFromRole(self, permission_id: int, role_id: int) -> None:
         link = (
             self._session.query(RolePermissionModel)
-            .filter(RolePermissionModel.RoleId == role_id, RolePermissionModel.PermissionId == permission_id)
+            .filter(RolePermissionModel.role_id == role_id, RolePermissionModel.permission_id == permission_id)
             .first()
         )
         if link:
@@ -71,24 +71,24 @@ class PermissionRepository(IPermissionRepository):
     async def GetPermissionsByRole(self, role_id: int) -> List[Permission]:
         joins = (
             self._session.query(PermissionModel)
-            .join(RolePermissionModel, RolePermissionModel.PermissionId == PermissionModel.Id)
-            .filter(RolePermissionModel.RoleId == role_id)
+            .join(RolePermissionModel, RolePermissionModel.permission_id == PermissionModel.id)
+            .filter(RolePermissionModel.role_id == role_id)
             .all()
         )
         return [self._MapToEntity(r) for r in joins]
 
     def _MapToEntity(self, row: PermissionModel) -> Permission:
         return Permission(
-            Id=row.Id,
-            Name=row.Name,
-            Description=row.Description,
-            IsActive=row.IsActive,
+            id=row.id,
+            name=row.name,
+            description=row.description,
+            is_active=row.is_active,
         )
 
     def _MapToModel(self, entity: Permission) -> PermissionModel:
         return PermissionModel(
-            Id=entity.Id,
-            Name=entity.Name,
-            Description=entity.Description,
-            IsActive=entity.IsActive,
+            id=entity.id,
+            name=entity.name,
+            description=entity.description,
+            is_active=entity.is_active,
         )

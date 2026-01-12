@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 
 class WeatherForecastDto(BaseModel):
-    Id: int | None = None
-    Date: date
-    TemperatureC: int
-    Summary: str | None = None
+    id: int | None = None
+    date: date
+    temperature_c: int
+    summary: str | None = None

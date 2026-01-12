@@ -3,9 +3,9 @@ from pydantic import BaseModel, EmailStr
 
 
 class UserDto(BaseModel):
-    Id: int | None = None
-    UserName: str
-    Email: EmailStr
-    FullName: str | None = None
-    IsActive: bool = True
-    Roles: Optional[List[str]] = None
+    id: int | None = None
+    user_name: str
+    email: EmailStr
+    full_name: str | None = None
+    is_active: bool = True
+    roles: Optional[List[str]] = None

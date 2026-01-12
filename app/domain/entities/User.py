@@ -4,10 +4,10 @@ from typing import List, Optional
 
 @dataclass
 class User:
-    Id: int | None
-    UserName: str
-    Email: str
-    FullName: str | None = None
-    IsActive: bool = True
-    PasswordHash: str | None = None
-    Roles: Optional[List[str]] = None
+    id: int | None
+    user_name: str
+    email: str
+    full_name: str | None = None
+    is_active: bool = True
+    password_hash: str | None = None
+    roles: Optional[List[str]] = None

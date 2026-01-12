@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class Product:
-    Id: int | None
-    Name: str
-    Price: float
-    IsActive: bool = True
+    id: int | None
+    name: str
+    price: float
+    is_active: bool = True

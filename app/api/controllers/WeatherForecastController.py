@@ -73,13 +73,13 @@ async def Create(dto: WeatherForecastDto, service: IWeatherForecastService = Dep
     - Tạo mới WeatherForecast.
 
     Body:
-    - WeatherForecastDto (không cần Id).
+    - WeatherForecastDto (không cần id).
 
     Returns:
     - 201: ApiResponse[WeatherForecastDto] + header Location
     """
     created = await service.Create(dto)
-    location = f"/api/weather-forecasts/{created.Id}"
+    location = f"/api/weather-forecasts/{created.id}"
     return Created(location, created)
 
 

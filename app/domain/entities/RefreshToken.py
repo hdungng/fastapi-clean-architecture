@@ -4,10 +4,10 @@ from datetime import datetime
 
 @dataclass
 class RefreshToken:
-    Id: int | None
-    UserId: int
-    Token: str
-    ExpiresAt: datetime
-    RevokedAt: datetime | None = None
-    ReplacedByToken: str | None = None
-    IsRevoked: bool = False
+    id: int | None
+    user_id: int
+    token: str
+    expires_at: datetime
+    revoked_at: datetime | None = None
+    replaced_by_token: str | None = None
+    is_revoked: bool = False
