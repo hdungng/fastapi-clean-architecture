@@ -89,7 +89,6 @@ async def seed():
             full_name="System Administrator",
             is_active=True,
             password_hash=HashPassword(ADMIN_PASSWORD),
-            roles=None,
         )
         created_user = await uow.Users.Add(user)
         user_id = created_user.id

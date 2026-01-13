@@ -111,7 +111,6 @@ class UserRepository(IUserRepository):
             full_name=row.full_name,
             is_active=row.is_active,
             password_hash=row.password_hash,
-            roles=None,
         )
 
     def _MapToModel(self, entity: User) -> UserModel:

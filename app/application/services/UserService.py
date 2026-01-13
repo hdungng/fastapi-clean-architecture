@@ -72,7 +72,6 @@ class UserService(IUserService):
             full_name=dto.full_name,
             is_active=dto.is_active,
             password_hash=HashPassword(dto.password),
-            roles=None,
         )
         created = await self._unit_of_work.Users.Add(entity)
 
