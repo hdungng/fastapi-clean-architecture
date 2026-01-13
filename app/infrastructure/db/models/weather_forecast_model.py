@@ -4,9 +4,9 @@ from app.infrastructure.db.audit_mixin import AuditMixin
 
 
 class WeatherForecastModel(AuditMixin, Base):
-    __tablename__ = "WeatherForecasts"
+    __tablename__ = "weather_forecasts"
 
-    id = Column("Id", Integer, primary_key=True, index=True)
-    date = Column("Date", Date, nullable=False)
-    temperature_c = Column("TemperatureC", Integer, nullable=False)
-    summary = Column("Summary", String(256), nullable=True)
+    id = Column("id", Integer, primary_key=True, index=True)
+    date = Column("date", Date, nullable=False)
+    temperature_c = Column("temperature_c", Integer, nullable=False)
+    summary = Column("summary", String(256), nullable=True)

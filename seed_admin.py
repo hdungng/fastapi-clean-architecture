@@ -112,18 +112,17 @@ async def seed():
     session = db.Session
     perm_rows = (
         session.query(PermissionModel)
-        .join(RolePermissionModel, RolePermissionModel.PermissionId == PermissionModel.Id)
-        .filter(RolePermissionModel.RoleId.in_([r.Id for r in roles]))
+        .join(RolePermissionModel, RolePermissionModel.permission_id == PermissionModel.id)
+        .filter(RolePermissionModel.role_id.in_([r.Id for r in roles]))
         .all()
     )
     perm_names = sorted({p.Name for p in perm_rows})
 
     user_row = session.query(
         __import__("app.infrastructure.db.models.user_model", fromlist=["UserModel"]).UserModel
-    ).filter_by(Id=user_id).first()
+    ).filter_by(id=user_id).first()
     if user_row:
-        user_row.Roles = ",".join(role_names)
-        user_row.Permissions = ",".join(perm_names)
+        user_row.roles = ",".join(role_names)
         session.flush()
 
     await uow.SaveChanges()

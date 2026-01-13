@@ -4,10 +4,10 @@ from app.infrastructure.db.audit_mixin import AuditMixin
 
 
 class UserRoleModel(AuditMixin, Base):
-    __tablename__ = "UserRoles"
+    __tablename__ = "user_roles"
 
-    id = Column("Id", Integer, primary_key=True, index=True)
-    user_id = Column("UserId", Integer, ForeignKey("Users.Id", ondelete="CASCADE"), nullable=False)
-    role_id = Column("RoleId", Integer, ForeignKey("Roles.Id", ondelete="CASCADE"), nullable=False)
+    id = Column("id", Integer, primary_key=True, index=True)
+    user_id = Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    role_id = Column("role_id", Integer, ForeignKey("roles.id", ondelete="CASCADE"), nullable=False)
 
-    __table_args__ = (UniqueConstraint("UserId", "RoleId", name="uq_user_role"),)
+    __table_args__ = (UniqueConstraint("user_id", "role_id", name="uq_user_role"),)

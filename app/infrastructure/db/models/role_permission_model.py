@@ -4,10 +4,10 @@ from app.infrastructure.db.audit_mixin import AuditMixin
 
 
 class RolePermissionModel(AuditMixin, Base):
-    __tablename__ = "RolePermissions"
+    __tablename__ = "role_permissions"
 
-    id = Column("Id", Integer, primary_key=True, index=True)
-    role_id = Column("RoleId", Integer, ForeignKey("Roles.Id", ondelete="CASCADE"), nullable=False)
-    permission_id = Column("PermissionId", Integer, ForeignKey("Permissions.Id", ondelete="CASCADE"), nullable=False)
+    id = Column("id", Integer, primary_key=True, index=True)
+    role_id = Column("role_id", Integer, ForeignKey("roles.id", ondelete="CASCADE"), nullable=False)
+    permission_id = Column("permission_id", Integer, ForeignKey("permissions.id", ondelete="CASCADE"), nullable=False)
 
-    __table_args__ = (UniqueConstraint("RoleId", "PermissionId", name="uq_role_permission"),)
+    __table_args__ = (UniqueConstraint("role_id", "permission_id", name="uq_role_permission"),)
