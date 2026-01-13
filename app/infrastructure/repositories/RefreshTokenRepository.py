@@ -5,6 +5,7 @@ from sqlalchemy import and_
 from app.domain.repositories.IRefreshTokenRepository import IRefreshTokenRepository
 from app.domain.entities.RefreshToken import RefreshToken
 from app.infrastructure.db.models.refresh_token_model import RefreshTokenModel
+from app.infrastructure.mapping.AutoMapper import MapperInstance
 
 
 class RefreshTokenRepository(IRefreshTokenRepository):
@@ -12,7 +13,7 @@ class RefreshTokenRepository(IRefreshTokenRepository):
         self._session = session
 
     async def Add(self, entity: RefreshToken) -> RefreshToken:
-        row = self._MapToModel(entity)
+        row = MapperInstance.Map(entity, RefreshTokenModel)
         self._session.add(row)
         self._session.flush()
         entity.id = row.id
@@ -20,7 +21,7 @@ class RefreshTokenRepository(IRefreshTokenRepository):
 
     async def GetByToken(self, token: str) -> Optional[RefreshToken]:
         row = self._session.query(RefreshTokenModel).filter(RefreshTokenModel.token == token).first()
-        return self._MapToEntity(row) if row else None
+        return MapperInstance.Map(row, RefreshToken) if row else None
 
     async def Revoke(self, token: RefreshToken) -> None:
         row = self._session.query(RefreshTokenModel).filter(RefreshTokenModel.id == token.id).first()
@@ -47,26 +48,4 @@ class RefreshTokenRepository(IRefreshTokenRepository):
                 RefreshTokenModel.expires_at > now,
             )
         )
-        return [self._MapToEntity(r) for r in rows]
-
-    def _MapToEntity(self, row: RefreshTokenModel) -> RefreshToken:
-        return RefreshToken(
-            id=row.id,
-            user_id=row.user_id,
-            token=row.token,
-            expires_at=row.expires_at,
-            revoked_at=row.revoked_at,
-            replaced_by_token=row.replaced_by_token,
-            is_revoked=row.is_revoked,
-        )
-
-    def _MapToModel(self, entity: RefreshToken) -> RefreshTokenModel:
-        return RefreshTokenModel(
-            id=entity.id,
-            user_id=entity.user_id,
-            token=entity.token,
-            expires_at=entity.expires_at,
-            revoked_at=entity.revoked_at,
-            replaced_by_token=entity.replaced_by_token,
-            is_revoked=entity.is_revoked,
-        )
+        return [MapperInstance.Map(r, RefreshToken) for r in rows]

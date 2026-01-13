@@ -8,4 +8,4 @@ class UserCreateDto(BaseModel):
     full_name: str | None = None
     is_active: bool = True
     password: str
-    roles: Optional[List[str]] = None
+    roles: Optional[List[int]] = None

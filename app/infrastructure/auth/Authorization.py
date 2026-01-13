@@ -16,7 +16,7 @@ class UserPrincipal:
 
 
 def BuildPrincipal(user: UserDto, roles: List[str] | None = None) -> UserPrincipal:
-    resolved_roles = roles or user.roles or []
+    resolved_roles = roles or []
     return UserPrincipal(
         id=user.id or 0,
         user_name=user.user_name,
