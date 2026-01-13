@@ -74,12 +74,12 @@ async def GetUsers(
         is_active=isActive,
     )
     meta = {
-        "Total": paged.Total,
-        "Page": paged.Page,
-        "PageSize": paged.PageSize,
-        "TotalPages": paged.TotalPages,
+        "total": paged.total,
+        "page": paged.page,
+        "page_size": paged.page_size,
+        "total_pages": paged.total_pages,
     }
-    return Ok(paged.Items, meta=meta)
+    return Ok(paged.items, meta=meta)
 
 
 @router.get("/{id}")

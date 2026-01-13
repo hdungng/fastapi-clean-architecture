@@ -39,5 +39,27 @@ class IUserService(ABC):
 
     @abstractmethod
     async def ChangePassword(self, user_id: int, current_password: str, new_password: str) -> None:
-        """Đổi password cho user với kiểm tra current password."""
         pass
+
+    @abstractmethod
+    async def GetCurrentUserProfile(self, user_id: int) -> Optional[UserDto]:
+        pass
+
+    @abstractmethod
+    async def GetCurrentUserRoles(self, user_id: int) -> List[str]:
+        pass
+
+    @abstractmethod
+    async def GetCurrentUserPermissions(self, user_id: int) -> List[str]:
+        pass
+
+
+    @abstractmethod
+    async def UpdateCurrentUserRoles(self, user_id: int, role_names: List[str]) -> UserDto:
+        pass
+
+    @abstractmethod
+    async def ChangePassword(self, user_id: int, current_password: str, new_password: str) -> None:
+        pass
+
+

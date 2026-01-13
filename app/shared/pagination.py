@@ -6,8 +6,8 @@ T = TypeVar("T")
 
 class PagedResult(Generic[T]):
     def __init__(self, items: List[T], total: int, page: int, page_size: int):
-        self.Items = items
-        self.Total = total
-        self.Page = page
-        self.PageSize = page_size
-        self.TotalPages = ceil(total / page_size) if page_size else 0
+        self.items = items
+        self.total = total
+        self.page = page
+        self.page_size = page_size
+        self.total_pages = ceil(total / page_size) if page_size else 0

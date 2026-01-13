@@ -32,7 +32,7 @@ async def seed():
     for name in default_roles:
         existing = await uow.Roles.GetByName(name)
         if existing is None:
-            created = await uow.Roles.Add(Role(Id=None, Name=name, Description=f"{name} role", IsActive=True))
+            created = await uow.Roles.Add(Role(id=None, name=name, description=f"{name} role", is_active=True))
             role_entities[name] = created
         else:
             role_entities[name] = existing
@@ -54,7 +54,7 @@ async def seed():
         existing = await uow.Permissions.GetByName(name)
         if existing is None:
             created = await uow.Permissions.Add(
-                Permission(Id=None, Name=name, Description=f"{name} permission", IsActive=True)
+                Permission(id=None, name=name, description=f"{name} permission", is_active=True)
             )
             perm_entities[name] = created
         else:
@@ -63,19 +63,19 @@ async def seed():
     # 3) Grant all permissions to SuperAdmin
     super_admin_role = role_entities["SuperAdmin"]
     for p in perm_entities.values():
-        await uow.Permissions.AssignPermissionToRole(permission_id=p.Id, role_id=super_admin_role.Id)
+        await uow.Permissions.AssignPermissionToRole(permission_id=p.id, role_id=super_admin_role.id)
 
     # 4) Admin: subset (Users.*, Products.*)
     admin_role = role_entities["Admin"]
     for name in ["Users.Read", "Users.Write", "Products.Read", "Products.Write"]:
         p = perm_entities[name]
-        await uow.Permissions.AssignPermissionToRole(permission_id=p.Id, role_id=admin_role.Id)
+        await uow.Permissions.AssignPermissionToRole(permission_id=p.id, role_id=admin_role.id)
 
     # 5) User: read-only
     user_role = role_entities["User"]
     for name in ["Users.Read", "Products.Read"]:
         p = perm_entities[name]
-        await uow.Permissions.AssignPermissionToRole(permission_id=p.Id, role_id=user_role.Id)
+        await uow.Permissions.AssignPermissionToRole(permission_id=p.id, role_id=user_role.id)
 
     # 6) Seed admin user
     existing_user = await uow.Users.GetByUserName(ADMIN_USERNAME)
@@ -83,27 +83,26 @@ async def seed():
 
     if existing_user is None:
         user = User(
-            Id=None,
-            UserName=ADMIN_USERNAME,
-            Email=ADMIN_EMAIL,
-            FullName="System Administrator",
-            IsActive=True,
-            PasswordHash=HashPassword(ADMIN_PASSWORD),
-            Roles=None,
-            Permissions=None,
+            id=None,
+            user_name=ADMIN_USERNAME,
+            email=ADMIN_EMAIL,
+            full_name="System Administrator",
+            is_active=True,
+            password_hash=HashPassword(ADMIN_PASSWORD),
+            roles=None,
         )
         created_user = await uow.Users.Add(user)
-        user_id = created_user.Id
+        user_id = created_user.id
     else:
-        user_id = existing_user.Id
+        user_id = existing_user.id
 
     # 7) Assign SuperAdmin role to admin user
-    await uow.Roles.AssignRoleToUser(user_id=user_id, role_id=super_admin_role.Id)
+    await uow.Roles.AssignRoleToUser(user_id=user_id, role_id=super_admin_role.id)
 
     # 8) Sync cached Roles & Permissions on User (denormalized)
     #    - Collect roles & permissions từ DB và lưu vào cột Users.Roles / Users.Permissions
     roles = await uow.Roles.GetRolesByUser(user_id)
-    role_names = [r.Name for r in roles]
+    role_names = [r.name for r in roles]
 
     # sum permissions từ tất cả role
     from app.infrastructure.db.models.role_permission_model import RolePermissionModel
@@ -113,10 +112,10 @@ async def seed():
     perm_rows = (
         session.query(PermissionModel)
         .join(RolePermissionModel, RolePermissionModel.permission_id == PermissionModel.id)
-        .filter(RolePermissionModel.role_id.in_([r.Id for r in roles]))
+        .filter(RolePermissionModel.role_id.in_([r.id for r in roles]))
         .all()
     )
-    perm_names = sorted({p.Name for p in perm_rows})
+    perm_names = sorted({p.name for p in perm_rows})
 
     user_row = session.query(
         __import__("app.infrastructure.db.models.user_model", fromlist=["UserModel"]).UserModel
