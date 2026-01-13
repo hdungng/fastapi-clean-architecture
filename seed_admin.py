@@ -99,8 +99,6 @@ async def seed():
     # 7) Assign SuperAdmin role to admin user
     await uow.Roles.AssignRoleToUser(user_id=user_id, role_id=super_admin_role.id)
 
-    # 8) Sync cached Roles & Permissions on User (denormalized)
-    #    - Collect roles & permissions từ DB và lưu vào cột Users.Roles / Users.Permissions
     roles = await uow.Roles.GetRolesByUser(user_id)
     role_names = [r.name for r in roles]
 
@@ -116,13 +114,6 @@ async def seed():
         .all()
     )
     perm_names = sorted({p.name for p in perm_rows})
-
-    user_row = session.query(
-        __import__("app.infrastructure.db.models.user_model", fromlist=["UserModel"]).UserModel
-    ).filter_by(id=user_id).first()
-    if user_row:
-        user_row.roles = ",".join(role_names)
-        session.flush()
 
     await uow.SaveChanges()
 

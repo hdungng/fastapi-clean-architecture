@@ -2,13 +2,14 @@ from typing import List
 from fastapi import APIRouter, Depends
 
 from app.application.dtos.ProductDto import ProductDto
+from app.application.dtos.ProductCreateDto import ProductCreateDto
 from app.application.services.interfaces.IProductService import IProductService
 from app.application.services.ProductService import ProductService
 from app.domain.repositories.IUnitOfWork import IUnitOfWork
 from app.infrastructure.db.DbContext import DbContext
 from app.infrastructure.repositories.UnitOfWork import UnitOfWork
 from app.infrastructure.auth.Authorization import RequireRoles, RequirePermissions, UserPrincipal
-from app.shared.api_responses import Ok, NotFound, Created, BadRequest
+from app.shared.api_responses import Ok, NotFound, Created
 
 
 router = APIRouter(prefix="/api/products", tags=["Products"])
@@ -75,7 +76,7 @@ async def GetProductById(
 
 @router.post("")
 async def CreateProduct(
-    dto: ProductDto,
+    dto: ProductCreateDto,
     service: IProductService = Depends(GetService),
     principal: UserPrincipal = Depends(RequirePermissions("Products.Write", enforce=True)),
 ):
@@ -91,9 +92,8 @@ async def CreateProduct(
     Returns:
     - 201: ApiResponse[ProductDto]
     """
-    if dto.id is not None:
-        return BadRequest("id must be null when creating a new product")
-    created = await service.Create(dto)
+    payload = dto.model_dump() if hasattr(dto, "model_dump") else dto.dict()
+    created = await service.Create(ProductDto(**payload))
     location = f"/api/products/{created.id}"
     return Created(location, created)
 

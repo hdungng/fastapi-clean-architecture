@@ -2,6 +2,7 @@ from typing import Optional, List
 from fastapi import APIRouter, Depends
 
 from app.application.dtos.UserDto import UserDto
+from app.application.dtos.UserCreateDto import UserCreateDto
 from app.application.dtos.ChangePasswordDto import ChangePasswordDto
 from app.application.dtos.UserRolesUpdateDto import UserRolesUpdateDto
 from app.application.services.UserService import UserService
@@ -82,31 +83,9 @@ async def GetUsers(
     return Ok(paged.items, meta=meta)
 
 
-@router.get("/{id}")
-async def GetById(
-    id: int,
-    service: IUserService = Depends(GetService),
-    current_user: UserDto = Depends(GetCurrentUser),
-):
-    """
-    GET /api/users/{id}
-
-    Summary:
-    - Lấy thông tin người dùng theo Id.
-
-    Returns:
-    - 200: ApiResponse[UserDto]
-    - 404: User not found
-    """
-    result = await service.GetById(id)
-    if not result:
-        return NotFound("User not found")
-    return Ok(result)
-
-
 @router.post("")
 async def Create(
-    dto: UserDto,
+    dto: UserCreateDto,
     service: IUserService = Depends(GetService),
     current_user: UserDto = Depends(GetCurrentUser),
 ):
@@ -114,55 +93,17 @@ async def Create(
     POST /api/users
 
     Summary:
-    - Tạo mới user (DTO không chứa Password, phần login dùng password riêng).
+    - Tạo mới user (có password + roles).
 
     Returns:
     - 201: ApiResponse[UserDto]
     """
-    if dto.id is not None:
-        return BadRequest("id must be null when creating a new user")
-    created = await service.Create(dto)
+    try:
+        created = await service.Create(dto)
+    except ValueError as ex:
+        return BadRequest(str(ex))
     location = f"/api/users/{created.id}"
     return Created(location, created)
-
-
-@router.put("/{id}")
-async def Update(
-    id: int,
-    dto: UserDto,
-    service: IUserService = Depends(GetService),
-    current_user: UserDto = Depends(GetCurrentUser),
-):
-    """
-    PUT /api/users/{id}
-
-    Summary:
-    - Cập nhật thông tin user (trừ password).
-
-    Returns:
-    - 200: ApiResponse[UserDto]
-    """
-    updated = await service.Update(id, dto)
-    return Ok(updated)
-
-
-@router.delete("/{id}")
-async def Delete(
-    id: int,
-    service: IUserService = Depends(GetService),
-    current_user: UserDto = Depends(GetCurrentUser),
-):
-    """
-    DELETE /api/users/{id}
-
-    Summary:
-    - Xoá user theo Id.
-
-    Returns:
-    - 200: ApiResponse với message trong data
-    """
-    await service.Delete(id)
-    return Ok({"message": "User deleted"})
 
 
 # -------- Current user self endpoints --------
@@ -268,3 +209,64 @@ async def ChangeMyPassword(
     except ValueError as ex:
         return BadRequest(str(ex))
     return Ok({"message": "Password changed successfully"})
+
+
+@router.get("/{id}")
+async def GetById(
+    id: int,
+    service: IUserService = Depends(GetService),
+    current_user: UserDto = Depends(GetCurrentUser),
+):
+    """
+    GET /api/users/{id}
+
+    Summary:
+    - Lấy thông tin người dùng theo Id.
+
+    Returns:
+    - 200: ApiResponse[UserDto]
+    - 404: User not found
+    """
+    result = await service.GetById(id)
+    if not result:
+        return NotFound("User not found")
+    return Ok(result)
+
+
+@router.put("/{id}")
+async def Update(
+    id: int,
+    dto: UserDto,
+    service: IUserService = Depends(GetService),
+    current_user: UserDto = Depends(GetCurrentUser),
+):
+    """
+    PUT /api/users/{id}
+
+    Summary:
+    - Cập nhật thông tin user (trừ password).
+
+    Returns:
+    - 200: ApiResponse[UserDto]
+    """
+    updated = await service.Update(id, dto)
+    return Ok(updated)
+
+
+@router.delete("/{id}")
+async def Delete(
+    id: int,
+    service: IUserService = Depends(GetService),
+    current_user: UserDto = Depends(GetCurrentUser),
+):
+    """
+    DELETE /api/users/{id}
+
+    Summary:
+    - Xoá user theo Id.
+
+    Returns:
+    - 200: ApiResponse với message trong data
+    """
+    await service.Delete(id)
+    return Ok({"message": "User deleted"})

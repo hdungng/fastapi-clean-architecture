@@ -2,13 +2,14 @@ from typing import List
 from fastapi import APIRouter, Depends
 
 from app.application.dtos.PermissionDto import PermissionDto
+from app.application.dtos.PermissionCreateDto import PermissionCreateDto
 from app.application.services.interfaces.IPermissionService import IPermissionService
 from app.application.services.PermissionService import PermissionService
 from app.domain.repositories.IUnitOfWork import IUnitOfWork
 from app.infrastructure.db.DbContext import DbContext
 from app.infrastructure.repositories.UnitOfWork import UnitOfWork
 from app.infrastructure.auth.Authorization import RequireRoles, UserPrincipal
-from app.shared.api_responses import Ok, NotFound, Created, BadRequest
+from app.shared.api_responses import Ok, NotFound, Created
 
 
 router = APIRouter(prefix="/api/permissions", tags=["Permissions"])
@@ -54,13 +55,12 @@ async def GetPermissionById(
 
 @router.post("")
 async def CreatePermission(
-    dto: PermissionDto,
+    dto: PermissionCreateDto,
     service: IPermissionService = Depends(GetService),
     principal: UserPrincipal = Depends(RequireRoles("Admin")),
 ):
-    if dto.id is not None:
-        return BadRequest("id must be null when creating a new permission")
-    created = await service.Create(dto)
+    payload = dto.model_dump() if hasattr(dto, "model_dump") else dto.dict()
+    created = await service.Create(PermissionDto(**payload))
     location = f"/api/permissions/{created.id}"
     return Created(location, created)
 
