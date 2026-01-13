@@ -17,6 +17,7 @@ def RegisterRoutes(app: FastAPI) -> None:
     - Route prefix / tag được định nghĩa trong từng *Controller.py
     """
     app.include_router(AuthController.router)
+    app.include_router(AuthController.self_router)
     app.include_router(WeatherForecastController.router)
     app.include_router(UserController.router)
     app.include_router(ProductController.router)
