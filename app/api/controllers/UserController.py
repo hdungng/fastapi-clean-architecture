@@ -1,17 +1,14 @@
-from typing import Optional, List
+from typing import Optional
 from fastapi import APIRouter, Depends
 
 from app.application.dtos.UserDto import UserDto
 from app.application.dtos.UserCreateDto import UserCreateDto
-from app.application.dtos.ChangePasswordDto import ChangePasswordDto
-from app.application.dtos.UserRolesUpdateDto import UserRolesUpdateDto
 from app.application.services.UserService import UserService
 from app.application.services.interfaces.IUserService import IUserService
 from app.domain.repositories.IUnitOfWork import IUnitOfWork
 from app.infrastructure.db.DbContext import DbContext
 from app.infrastructure.repositories.UnitOfWork import UnitOfWork
 from app.infrastructure.auth.Dependencies import GetCurrentUser
-from app.infrastructure.auth.Authorization import RequirePermissions, UserPrincipal
 from app.shared.api_responses import Ok, NotFound, Created, BadRequest
 
 
@@ -104,111 +101,6 @@ async def Create(
         return BadRequest(str(ex))
     location = f"/api/users/{created.id}"
     return Created(location, created)
-
-
-# -------- Current user self endpoints --------
-
-
-@router.get("/me")
-async def GetMe(
-    service: IUserService = Depends(GetService),
-    current_user: UserDto = Depends(GetCurrentUser),
-):
-    """
-    GET /api/users/me
-
-    Summary:
-    - Lấy thông tin profile của chính user đang đăng nhập.
-    """
-    profile = await service.GetCurrentUserProfile(current_user.id)
-    if not profile:
-        return NotFound("User not found")
-    return Ok(profile)
-
-
-@router.get("/me/roles")
-async def GetMyRoles(
-    service: IUserService = Depends(GetService),
-    current_user: UserDto = Depends(GetCurrentUser),
-):
-    """
-    GET /api/users/me/roles
-
-    Summary:
-    - Lấy danh sách role name của chính user.
-    """
-    roles: List[str] = await service.GetCurrentUserRoles(current_user.id)
-    return Ok(roles)
-
-
-@router.get("/me/permissions")
-async def GetMyPermissions(
-    service: IUserService = Depends(GetService),
-    current_user: UserDto = Depends(GetCurrentUser),
-):
-    """
-    GET /api/users/me/permissions
-
-    Summary:
-    - Lấy danh sách permission name hiệu lực (từ tất cả roles của user).
-    """
-    perms: List[str] = await service.GetCurrentUserPermissions(current_user.id)
-    return Ok(perms)
-
-
-@router.put("/me/roles")
-async def UpdateMyRoles(
-    request: UserRolesUpdateDto,
-    service: IUserService = Depends(GetService),
-    principal: UserPrincipal = Depends(RequirePermissions("Users.Self.ManageRoles", enforce=True)),
-):
-    """
-    PUT /api/users/me/roles
-
-    Summary:
-    - Cập nhật danh sách roles cho chính user.
-
-    Authorization:
-    - Permission bắt buộc: Users.Self.ManageRoles
-
-    Body:
-    - { "roles": ["Admin", "User"] }
-    """
-    try:
-        updated = await service.UpdateCurrentUserRoles(principal.id, request.roles)
-    except ValueError as ex:
-        return BadRequest(str(ex))
-    return Ok(updated)
-
-@router.put("/me/password")
-async def ChangeMyPassword(
-    request: ChangePasswordDto,
-    service: IUserService = Depends(GetService),
-    current_user: UserDto = Depends(GetCurrentUser),
-):
-    """
-    PUT /api/users/me/password
-
-    Summary:
-    - Đổi mật khẩu cho chính user.
-
-    Body:
-    - current_password: mật khẩu hiện tại
-    - new_password: mật khẩu mới
-
-    Rules:
-    - Bắt buộc đúng current_password
-    - Không yêu cầu permission đặc biệt, chỉ cần user đã đăng nhập
-    """
-    try:
-        await service.ChangePassword(
-            user_id=current_user.id,
-            current_password=request.current_password,
-            new_password=request.new_password,
-        )
-    except ValueError as ex:
-        return BadRequest(str(ex))
-    return Ok({"message": "Password changed successfully"})
 
 
 @router.get("/{id}")
