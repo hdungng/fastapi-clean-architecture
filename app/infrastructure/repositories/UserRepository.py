@@ -5,6 +5,7 @@ from sqlalchemy import or_, asc, desc
 from app.domain.repositories.IUserRepository import IUserRepository
 from app.domain.entities.User import User
 from app.infrastructure.db.models.user_model import UserModel
+from app.infrastructure.mapping.AutoMapper import MapperInstance
 
 
 class UserRepository(IUserRepository):
@@ -13,16 +14,16 @@ class UserRepository(IUserRepository):
 
     async def GetAll(self) -> List[User]:
         rows = self._session.query(UserModel).all()
-        return [self._MapToEntity(r) for r in rows]
+        return [MapperInstance.Map(r, User) for r in rows]
 
     async def GetById(self, id: int) -> Optional[User]:
         row = self._session.query(UserModel).filter(UserModel.id == id).first()
-        return self._MapToEntity(row) if row else None
+        return MapperInstance.Map(row, User) if row else None
 
     async def GetByUserName(self, user_name: str) -> Optional[User]:
         row = self._session.query(UserModel).filter(UserModel.user_name == user_name).first()
         print(row)
-        return self._MapToEntity(row) if row else None
+        return MapperInstance.Map(row, User) if row else None
 
     async def Search(
         self,
@@ -76,10 +77,10 @@ class UserRepository(IUserRepository):
         total = query.count()
         rows = query.offset((page - 1) * page_size).limit(page_size).all()
 
-        return [self._MapToEntity(r) for r in rows], total
+        return [MapperInstance.Map(r, User) for r in rows], total
 
     async def Add(self, entity: User) -> User:
-        row = self._MapToModel(entity)
+        row = MapperInstance.Map(entity, UserModel)
         self._session.add(row)
         self._session.flush()
         entity.id = row.id
@@ -102,23 +103,3 @@ class UserRepository(IUserRepository):
         if row:
             self._session.delete(row)
             self._session.flush()
-
-    def _MapToEntity(self, row: UserModel) -> User:
-        return User(
-            id=row.id,
-            user_name=row.user_name,
-            email=row.email,
-            full_name=row.full_name,
-            is_active=row.is_active,
-            password_hash=row.password_hash,
-        )
-
-    def _MapToModel(self, entity: User) -> UserModel:
-        return UserModel(
-            id=entity.id,
-            user_name=entity.user_name,
-            email=entity.email,
-            full_name=entity.full_name,
-            is_active=entity.is_active,
-            password_hash=entity.password_hash,
-        )

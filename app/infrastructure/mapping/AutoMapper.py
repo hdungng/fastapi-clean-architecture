@@ -9,7 +9,12 @@ class Mapper:
     def __init__(self):
         self._mappings: Dict[Tuple[Type[Any], Type[Any]], Callable[[Any], Any]] = {}
 
-    def CreateMap(self, source_type: Type[TSource], dest_type: Type[TDestination]):
+    def CreateMap(
+        self,
+        source_type: Type[TSource],
+        dest_type: Type[TDestination],
+        mapping_func: Callable[[TSource], TDestination] | None = None,
+    ):
         def default_mapping(source: TSource) -> TDestination:
             # 1) Extract data safely from source
             if hasattr(source, "model_dump"):  # Pydantic v2 BaseModel
@@ -39,7 +44,7 @@ class Mapper:
             # 4) Normal Python class/dataclass
             return dest_type(**data)  # type: ignore
 
-        self._mappings[(source_type, dest_type)] = default_mapping
+        self._mappings[(source_type, dest_type)] = mapping_func or default_mapping
         return self
 
     def Map(self, source: TSource, dest_type: Type[TDestination]) -> TDestination:
@@ -60,9 +65,11 @@ def ConfigureMappings():
     from app.infrastructure.mapping.ProductProfile import ProductProfile
     from app.infrastructure.mapping.RoleProfile import RoleProfile
     from app.infrastructure.mapping.PermissionProfile import PermissionProfile
+    from app.infrastructure.mapping.DbModelProfile import DbModelProfile
 
     WeatherForecastProfile(MapperInstance)
     UserProfile(MapperInstance)
     ProductProfile(MapperInstance)
     RoleProfile(MapperInstance)
     PermissionProfile(MapperInstance)
+    DbModelProfile(MapperInstance)

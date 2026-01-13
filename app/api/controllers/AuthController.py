@@ -110,9 +110,9 @@ async def GetMyRoles(
     GET /api/users/me/roles
 
     Summary:
-    - Lấy danh sách role name của chính user.
+    - Lấy danh sách role id của chính user.
     """
-    roles: List[str] = await service.GetCurrentUserRoles(current_user.id)
+    roles: List[int] = await service.GetCurrentUserRoles(current_user.id)
     return Ok(roles)
 
 
@@ -147,7 +147,7 @@ async def UpdateMyRoles(
     - Permission bắt buộc: Users.Self.ManageRoles
 
     Body:
-    - { "roles": ["Admin", "User"] }
+    - { "roles": [1, 2] }
     """
     try:
         updated = await service.UpdateCurrentUserRoles(principal.id, request.roles)

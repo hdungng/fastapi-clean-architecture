@@ -23,6 +23,11 @@ class IRoleRepository(ABC):
         pass
 
     @abstractmethod
+    async def GetByIds(self, ids: List[int]) -> List[Role]:
+        """Lấy danh sách Role theo list id (bỏ qua id không tồn tại)."""
+        pass
+
+    @abstractmethod
     async def Add(self, entity: Role) -> Role:
         pass
 

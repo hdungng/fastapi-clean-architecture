@@ -76,10 +76,11 @@ class UserService(IUserService):
         created = await self._unit_of_work.Users.Add(entity)
 
         if dto.roles:
-            roles = await self._unit_of_work.Roles.GetByNames(dto.roles)
+            roles = await self._unit_of_work.Roles.GetByIds(dto.roles)
             if len(roles) != len(set(dto.roles)):
-                missing = set(dto.roles) - {r.name for r in roles}
-                raise ValueError(f"Some roles not found: {', '.join(sorted(missing))}")
+                missing = set(dto.roles) - {r.id for r in roles}
+                missing_list = ", ".join(str(role_id) for role_id in sorted(missing))
+                raise ValueError(f"Some roles not found: {missing_list}")
             for role in roles:
                 await self._unit_of_work.Roles.AssignRoleToUser(user_id=created.id, role_id=role.id)
 
@@ -108,10 +109,10 @@ class UserService(IUserService):
         """Lấy thông tin profile của chính user."""
         return await self.GetById(user_id)
 
-    async def GetCurrentUserRoles(self, user_id: int) -> List[str]:
-        """Lấy danh sách role name của chính user."""
+    async def GetCurrentUserRoles(self, user_id: int) -> List[int]:
+        """Lấy danh sách role id của chính user."""
         roles = await self._unit_of_work.Roles.GetRolesByUser(user_id)
-        return [r.name for r in roles]
+        return [r.id for r in roles]
 
     async def GetCurrentUserPermissions(self, user_id: int) -> List[str]:
         """
@@ -126,18 +127,19 @@ class UserService(IUserService):
                 perm_names.add(p.name)
         return sorted(perm_names)
 
-    async def UpdateCurrentUserRoles(self, user_id: int, role_names: List[str]) -> UserDto:
+    async def UpdateCurrentUserRoles(self, user_id: int, role_ids: List[int]) -> UserDto:
         """
         Cập nhật danh sách role cho chính user.
 
         - Clear toàn bộ roles cũ
-        - Gán danh sách roles mới theo tên
+        - Gán danh sách roles mới theo id
         """
-        roles = await self._unit_of_work.Roles.GetByNames(role_names)
-        if len(roles) != len(set(role_names)):
-            # Có tên role không tồn tại
-            missing = set(role_names) - {r.name for r in roles}
-            raise ValueError(f"Some roles not found: {', '.join(sorted(missing))}")
+        roles = await self._unit_of_work.Roles.GetByIds(role_ids)
+        if len(roles) != len(set(role_ids)):
+            # Có id role không tồn tại
+            missing = set(role_ids) - {r.id for r in roles}
+            missing_list = ", ".join(str(role_id) for role_id in sorted(missing))
+            raise ValueError(f"Some roles not found: {missing_list}")
 
         # Clear & assign
         await self._unit_of_work.Roles.ClearRolesForUser(user_id)
@@ -151,7 +153,7 @@ class UserService(IUserService):
         await self._unit_of_work.SaveChanges()
 
         dto = MapperInstance.Map(entity, UserDto)
-        dto.roles = [r.name for r in roles]
+        dto.roles = [r.id for r in roles]
         return dto
 
     async def ChangePassword(self, user_id: int, current_password: str, new_password: str) -> None:
@@ -179,5 +181,5 @@ class UserService(IUserService):
             dto.roles = []
             return dto
         roles = await self._unit_of_work.Roles.GetRolesByUser(dto.id)
-        dto.roles = [r.name for r in roles]
+        dto.roles = [r.id for r in roles]
         return dto

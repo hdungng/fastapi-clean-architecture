@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.domain.repositories.IWeatherForecastRepository import IWeatherForecastRepository
 from app.domain.entities.WeatherForecast import WeatherForecast
 from app.infrastructure.db.models.weather_forecast_model import WeatherForecastModel
+from app.infrastructure.mapping.AutoMapper import MapperInstance
 
 
 class WeatherForecastRepository(IWeatherForecastRepository):
@@ -12,14 +13,14 @@ class WeatherForecastRepository(IWeatherForecastRepository):
 
     async def GetAll(self) -> List[WeatherForecast]:
         rows = self._session.query(WeatherForecastModel).all()
-        return [self._MapToEntity(r) for r in rows]
+        return [MapperInstance.Map(r, WeatherForecast) for r in rows]
 
     async def GetById(self, id: int) -> Optional[WeatherForecast]:
         row = self._session.query(WeatherForecastModel).filter(WeatherForecastModel.id == id).first()
-        return self._MapToEntity(row) if row else None
+        return MapperInstance.Map(row, WeatherForecast) if row else None
 
     async def Add(self, entity: WeatherForecast) -> WeatherForecast:
-        row = self._MapToModel(entity)
+        row = MapperInstance.Map(entity, WeatherForecastModel)
         self._session.add(row)
         self._session.flush()
         entity.id = row.id
@@ -40,19 +41,3 @@ class WeatherForecastRepository(IWeatherForecastRepository):
         if row:
             self._session.delete(row)
             self._session.flush()
-
-    def _MapToEntity(self, row: WeatherForecastModel) -> WeatherForecast:
-        return WeatherForecast(
-            id=row.id,
-            date=row.date,
-            temperature_c=row.temperature_c,
-            summary=row.summary,
-        )
-
-    def _MapToModel(self, entity: WeatherForecast) -> WeatherForecastModel:
-        return WeatherForecastModel(
-            id=entity.id,
-            date=entity.date,
-            temperature_c=entity.temperature_c,
-            summary=entity.summary,
-        )

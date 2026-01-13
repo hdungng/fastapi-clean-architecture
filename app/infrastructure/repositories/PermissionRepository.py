@@ -5,6 +5,7 @@ from app.domain.repositories.IPermissionRepository import IPermissionRepository
 from app.domain.entities.Permission import Permission
 from app.infrastructure.db.models.permission_model import PermissionModel
 from app.infrastructure.db.models.role_permission_model import RolePermissionModel
+from app.infrastructure.mapping.AutoMapper import MapperInstance
 
 
 class PermissionRepository(IPermissionRepository):
@@ -13,18 +14,18 @@ class PermissionRepository(IPermissionRepository):
 
     async def GetAll(self) -> List[Permission]:
         rows = self._session.query(PermissionModel).all()
-        return [self._MapToEntity(r) for r in rows]
+        return [MapperInstance.Map(r, Permission) for r in rows]
 
     async def GetById(self, id: int) -> Optional[Permission]:
         row = self._session.query(PermissionModel).filter(PermissionModel.id == id).first()
-        return self._MapToEntity(row) if row else None
+        return MapperInstance.Map(row, Permission) if row else None
 
     async def GetByName(self, name: str) -> Optional[Permission]:
         row = self._session.query(PermissionModel).filter(PermissionModel.name == name).first()
-        return self._MapToEntity(row) if row else None
+        return MapperInstance.Map(row, Permission) if row else None
 
     async def Add(self, entity: Permission) -> Permission:
-        row = self._MapToModel(entity)
+        row = MapperInstance.Map(entity, PermissionModel)
         self._session.add(row)
         self._session.flush()
         entity.id = row.id
@@ -75,20 +76,4 @@ class PermissionRepository(IPermissionRepository):
             .filter(RolePermissionModel.role_id == role_id)
             .all()
         )
-        return [self._MapToEntity(r) for r in joins]
-
-    def _MapToEntity(self, row: PermissionModel) -> Permission:
-        return Permission(
-            id=row.id,
-            name=row.name,
-            description=row.description,
-            is_active=row.is_active,
-        )
-
-    def _MapToModel(self, entity: Permission) -> PermissionModel:
-        return PermissionModel(
-            id=entity.id,
-            name=entity.name,
-            description=entity.description,
-            is_active=entity.is_active,
-        )
+        return [MapperInstance.Map(r, Permission) for r in joins]

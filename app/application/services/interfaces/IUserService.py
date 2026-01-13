@@ -47,7 +47,7 @@ class IUserService(ABC):
         pass
 
     @abstractmethod
-    async def GetCurrentUserRoles(self, user_id: int) -> List[str]:
+    async def GetCurrentUserRoles(self, user_id: int) -> List[int]:
         pass
 
     @abstractmethod
@@ -56,10 +56,9 @@ class IUserService(ABC):
 
 
     @abstractmethod
-    async def UpdateCurrentUserRoles(self, user_id: int, role_names: List[str]) -> UserDto:
+    async def UpdateCurrentUserRoles(self, user_id: int, role_ids: List[int]) -> UserDto:
         pass
 
     @abstractmethod
     async def ChangePassword(self, user_id: int, current_password: str, new_password: str) -> None:
         pass
-

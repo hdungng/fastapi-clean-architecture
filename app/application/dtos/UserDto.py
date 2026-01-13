@@ -8,4 +8,4 @@ class UserDto(BaseModel):
     email: EmailStr
     full_name: str | None = None
     is_active: bool = True
-    roles: Optional[List[str]] = None
+    roles: Optional[List[int]] = None

@@ -5,6 +5,7 @@ from app.domain.repositories.IRoleRepository import IRoleRepository
 from app.domain.entities.Role import Role
 from app.infrastructure.db.models.role_model import RoleModel
 from app.infrastructure.db.models.user_role_model import UserRoleModel
+from app.infrastructure.mapping.AutoMapper import MapperInstance
 
 
 class RoleRepository(IRoleRepository):
@@ -13,24 +14,30 @@ class RoleRepository(IRoleRepository):
 
     async def GetAll(self) -> List[Role]:
         rows = self._session.query(RoleModel).all()
-        return [self._MapToEntity(r) for r in rows]
+        return [MapperInstance.Map(r, Role) for r in rows]
 
     async def GetById(self, id: int) -> Optional[Role]:
         row = self._session.query(RoleModel).filter(RoleModel.id == id).first()
-        return self._MapToEntity(row) if row else None
+        return MapperInstance.Map(row, Role) if row else None
 
     async def GetByName(self, name: str) -> Optional[Role]:
         row = self._session.query(RoleModel).filter(RoleModel.name == name).first()
-        return self._MapToEntity(row) if row else None
+        return MapperInstance.Map(row, Role) if row else None
 
     async def GetByNames(self, names: List[str]) -> List[Role]:
         if not names:
             return []
         rows = self._session.query(RoleModel).filter(RoleModel.name.in_(names)).all()
-        return [self._MapToEntity(r) for r in rows]
+        return [MapperInstance.Map(r, Role) for r in rows]
+
+    async def GetByIds(self, ids: List[int]) -> List[Role]:
+        if not ids:
+            return []
+        rows = self._session.query(RoleModel).filter(RoleModel.id.in_(ids)).all()
+        return [MapperInstance.Map(r, Role) for r in rows]
 
     async def Add(self, entity: Role) -> Role:
-        row = self._MapToModel(entity)
+        row = MapperInstance.Map(entity, RoleModel)
         self._session.add(row)
         self._session.flush()
         entity.id = row.id
@@ -85,20 +92,4 @@ class RoleRepository(IRoleRepository):
             .filter(UserRoleModel.user_id == user_id)
             .all()
         )
-        return [self._MapToEntity(r) for r in joins]
-
-    def _MapToEntity(self, row: RoleModel) -> Role:
-        return Role(
-            id=row.id,
-            name=row.name,
-            description=row.description,
-            is_active=row.is_active,
-        )
-
-    def _MapToModel(self, entity: Role) -> RoleModel:
-        return RoleModel(
-            id=entity.id,
-            name=entity.name,
-            description=entity.description,
-            is_active=entity.is_active,
-        )
+        return [MapperInstance.Map(r, Role) for r in joins]
