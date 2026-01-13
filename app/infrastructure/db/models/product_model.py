@@ -4,9 +4,9 @@ from app.infrastructure.db.audit_mixin import AuditMixin
 
 
 class ProductModel(AuditMixin, Base):
-    __tablename__ = "Products"
+    __tablename__ = "products"
 
-    id = Column("Id", Integer, primary_key=True, index=True)
-    name = Column("Name", String(256), nullable=False)
-    price = Column("Price", Float, nullable=False)
-    is_active = Column("IsActive", Boolean, nullable=False, default=True)
+    id = Column("id", Integer, primary_key=True, index=True)
+    name = Column("name", String(256), nullable=False)
+    price = Column("price", Float, nullable=False)
+    is_active = Column("is_active", Boolean, nullable=False, default=True)

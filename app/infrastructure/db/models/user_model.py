@@ -4,12 +4,12 @@ from app.infrastructure.db.audit_mixin import AuditMixin
 
 
 class UserModel(AuditMixin, Base):
-    __tablename__ = "Users"
+    __tablename__ = "users"
 
-    id = Column("Id", Integer, primary_key=True, index=True)
-    user_name = Column("UserName", String(100), nullable=False, unique=True)
-    email = Column("Email", String(256), nullable=False, unique=True)
-    full_name = Column("FullName", String(256), nullable=True)
-    is_active = Column("IsActive", Boolean, nullable=False, default=True)
-    password_hash = Column("PasswordHash", String(256), nullable=True)
-    roles = Column("Roles", String(512), nullable=True)         # cache: 'Admin,User'
+    id = Column("id", Integer, primary_key=True, index=True)
+    user_name = Column("user_name", String(100), nullable=False, unique=True)
+    email = Column("email", String(256), nullable=False, unique=True)
+    full_name = Column("full_name", String(256), nullable=True)
+    is_active = Column("is_active", Boolean, nullable=False, default=True)
+    password_hash = Column("password_hash", String(256), nullable=True)
+    roles = Column("roles", String(512), nullable=True)         # cache: 'Admin,User'
