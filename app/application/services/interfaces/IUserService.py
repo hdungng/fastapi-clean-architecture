@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 from app.application.dtos.UserDto import UserDto
+from app.application.dtos.UserCreateDto import UserCreateDto
 from app.shared.pagination import PagedResult
 
 
@@ -26,7 +27,7 @@ class IUserService(ABC):
         pass
 
     @abstractmethod
-    async def Create(self, dto: UserDto) -> UserDto:
+    async def Create(self, dto: UserCreateDto) -> UserDto:
         pass
 
     @abstractmethod
@@ -61,5 +62,4 @@ class IUserService(ABC):
     @abstractmethod
     async def ChangePassword(self, user_id: int, current_password: str, new_password: str) -> None:
         pass
-
 

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from app.application.dtos.WeatherForecastDto import WeatherForecastDto
+from app.application.dtos.WeatherForecastCreateDto import WeatherForecastCreateDto
 from app.application.services.WeatherForecastService import WeatherForecastService
 from app.application.services.interfaces.IWeatherForecastService import IWeatherForecastService
 from app.domain.repositories.IUnitOfWork import IUnitOfWork
@@ -65,7 +66,7 @@ async def GetById(id: int, service: IWeatherForecastService = Depends(GetService
 
 
 @router.post("")
-async def Create(dto: WeatherForecastDto, service: IWeatherForecastService = Depends(GetService)):
+async def Create(dto: WeatherForecastCreateDto, service: IWeatherForecastService = Depends(GetService)):
     """
     POST /api/weather-forecasts
 
@@ -73,12 +74,13 @@ async def Create(dto: WeatherForecastDto, service: IWeatherForecastService = Dep
     - Tạo mới WeatherForecast.
 
     Body:
-    - WeatherForecastDto (không cần id).
+    - WeatherForecastCreateDto (không cần id).
 
     Returns:
     - 201: ApiResponse[WeatherForecastDto] + header Location
     """
-    created = await service.Create(dto)
+    payload = dto.model_dump() if hasattr(dto, "model_dump") else dto.dict()
+    created = await service.Create(WeatherForecastDto(**payload))
     location = f"/api/weather-forecasts/{created.id}"
     return Created(location, created)
 

@@ -1,6 +1,7 @@
 from typing import List, Optional
 from app.application.services.interfaces.IUserService import IUserService
 from app.application.dtos.UserDto import UserDto
+from app.application.dtos.UserCreateDto import UserCreateDto
 from app.domain.repositories.IUnitOfWork import IUnitOfWork
 from app.domain.entities.User import User
 from app.infrastructure.mapping.AutoMapper import MapperInstance
@@ -28,7 +29,10 @@ class UserService(IUserService):
     async def GetById(self, id: int) -> Optional[UserDto]:
         """Lấy user theo Id, trả về None nếu không có."""
         entity = await self._unit_of_work.Users.GetById(id)
-        return MapperInstance.Map(entity, UserDto) if entity else None
+        if not entity:
+            return None
+        dto = MapperInstance.Map(entity, UserDto)
+        return await self._AttachRoles(dto)
 
     async def GetPaged(
         self,
@@ -54,14 +58,36 @@ class UserService(IUserService):
             is_active=is_active,
         )
         dto_items = [MapperInstance.Map(e, UserDto) for e in items]
+        dto_items = [await self._AttachRoles(dto) for dto in dto_items]
         return PagedResult(dto_items, total, page, page_size)
 
-    async def Create(self, dto: UserDto) -> UserDto:
+    async def Create(self, dto: UserCreateDto) -> UserDto:
         """Tạo mới user từ DTO."""
-        entity = MapperInstance.Map(dto, User)
+        from app.infrastructure.auth.PasswordHasher import HashPassword
+
+        entity = User(
+            id=None,
+            user_name=dto.user_name,
+            email=dto.email,
+            full_name=dto.full_name,
+            is_active=dto.is_active,
+            password_hash=HashPassword(dto.password),
+            roles=None,
+        )
         created = await self._unit_of_work.Users.Add(entity)
+
+        if dto.roles:
+            roles = await self._unit_of_work.Roles.GetByNames(dto.roles)
+            if len(roles) != len(set(dto.roles)):
+                missing = set(dto.roles) - {r.name for r in roles}
+                raise ValueError(f"Some roles not found: {', '.join(sorted(missing))}")
+            for role in roles:
+                await self._unit_of_work.Roles.AssignRoleToUser(user_id=created.id, role_id=role.id)
+
         await self._unit_of_work.SaveChanges()
-        return MapperInstance.Map(created, UserDto)
+        user_dto = MapperInstance.Map(created, UserDto)
+        user_dto.roles = dto.roles or []
+        return user_dto
 
     async def Update(self, id: int, dto: UserDto) -> UserDto:
         """Cập nhật thông tin user theo Id."""
@@ -69,7 +95,8 @@ class UserService(IUserService):
         entity.id = id
         updated = await self._unit_of_work.Users.Update(entity)
         await self._unit_of_work.SaveChanges()
-        return MapperInstance.Map(updated, UserDto)
+        dto = MapperInstance.Map(updated, UserDto)
+        return await self._AttachRoles(dto)
 
     async def Delete(self, id: int) -> None:
         """Xoá user theo Id."""
@@ -118,16 +145,15 @@ class UserService(IUserService):
         for r in roles:
             await self._unit_of_work.Roles.AssignRoleToUser(user_id=user_id, role_id=r.id)
 
-        # Update cache on User entity
         entity = await self._unit_of_work.Users.GetById(user_id)
         if entity is None:
             raise ValueError("User not found when updating own roles")
-        entity.roles = [r.name for r in roles]
 
-        await self._unit_of_work.Users.Update(entity)
         await self._unit_of_work.SaveChanges()
 
-        return MapperInstance.Map(entity, UserDto)
+        dto = MapperInstance.Map(entity, UserDto)
+        dto.roles = [r.name for r in roles]
+        return dto
 
     async def ChangePassword(self, user_id: int, current_password: str, new_password: str) -> None:
         """
@@ -148,3 +174,11 @@ class UserService(IUserService):
         entity.password_hash = HashPassword(new_password)
         await self._unit_of_work.Users.Update(entity)
         await self._unit_of_work.SaveChanges()
+
+    async def _AttachRoles(self, dto: UserDto) -> UserDto:
+        if dto.id is None:
+            dto.roles = []
+            return dto
+        roles = await self._unit_of_work.Roles.GetRolesByUser(dto.id)
+        dto.roles = [r.name for r in roles]
+        return dto

@@ -2,13 +2,14 @@ from typing import List
 from fastapi import APIRouter, Depends
 
 from app.application.dtos.RoleDto import RoleDto
+from app.application.dtos.RoleCreateDto import RoleCreateDto
 from app.application.services.interfaces.IRoleService import IRoleService
 from app.application.services.RoleService import RoleService
 from app.domain.repositories.IUnitOfWork import IUnitOfWork
 from app.infrastructure.db.DbContext import DbContext
 from app.infrastructure.repositories.UnitOfWork import UnitOfWork
 from app.infrastructure.auth.Authorization import RequireRoles, UserPrincipal
-from app.shared.api_responses import Ok, NotFound, Created, BadRequest
+from app.shared.api_responses import Ok, NotFound, Created
 
 
 router = APIRouter(prefix="/api/roles", tags=["Roles"])
@@ -54,13 +55,12 @@ async def GetRoleById(
 
 @router.post("")
 async def CreateRole(
-    dto: RoleDto,
+    dto: RoleCreateDto,
     service: IRoleService = Depends(GetService),
     principal: UserPrincipal = Depends(RequireRoles("Admin")),
 ):
-    if dto.id is not None:
-        return BadRequest("id must be null when creating a new role")
-    created = await service.Create(dto)
+    payload = dto.model_dump() if hasattr(dto, "model_dump") else dto.dict()
+    created = await service.Create(RoleDto(**payload))
     location = f"/api/roles/{created.id}"
     return Created(location, created)
 

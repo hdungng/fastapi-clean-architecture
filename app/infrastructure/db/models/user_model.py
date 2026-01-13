@@ -12,4 +12,3 @@ class UserModel(AuditMixin, Base):
     full_name = Column("full_name", String(256), nullable=True)
     is_active = Column("is_active", Boolean, nullable=False, default=True)
     password_hash = Column("password_hash", String(256), nullable=True)
-    roles = Column("roles", String(512), nullable=True)         # cache: 'Admin,User'

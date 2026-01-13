@@ -94,7 +94,6 @@ class UserRepository(IUserRepository):
         row.full_name = entity.full_name
         row.is_active = entity.is_active
         row.password_hash = entity.password_hash
-        row.roles = self._Join(entity.roles)
         self._session.flush()
         return entity
 
@@ -112,7 +111,7 @@ class UserRepository(IUserRepository):
             full_name=row.full_name,
             is_active=row.is_active,
             password_hash=row.password_hash,
-            roles=self._Split(row.roles),
+            roles=None,
         )
 
     def _MapToModel(self, entity: User) -> UserModel:
@@ -123,15 +122,4 @@ class UserRepository(IUserRepository):
             full_name=entity.full_name,
             is_active=entity.is_active,
             password_hash=entity.password_hash,
-            roles=self._Join(entity.roles),
         )
-
-    def _Split(self, value: str | None) -> list[str] | None:
-        if not value:
-            return None
-        return [x.strip() for x in value.split(",") if x.strip()]
-
-    def _Join(self, items: list[str] | None) -> str | None:
-        if not items:
-            return None
-        return ",".join(items)

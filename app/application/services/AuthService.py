@@ -29,7 +29,8 @@ class AuthService(IAuthService):
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        roles = user.roles or []
+        role_entities = await self._unit_of_work.Roles.GetRolesByUser(user.id)
+        roles = [role.name for role in role_entities]
 
         access_token = CreateAccessToken(
             {
@@ -80,7 +81,8 @@ class AuthService(IAuthService):
                 detail="User for this token no longer exists",
             )
 
-        roles = user.roles or []
+        role_entities = await self._unit_of_work.Roles.GetRolesByUser(user.id)
+        roles = [role.name for role in role_entities]
 
         access_token = CreateAccessToken(
             {
