@@ -17,8 +17,6 @@ from app.shared.api_responses import Ok, BadRequest, NotFound
 
 
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
-self_router = APIRouter(prefix="/api/users", tags=["Auth"])
-
 
 def GetAuthService(unit_of_work: IUnitOfWork = Depends(GetUnitOfWork)) -> IAuthService:
     """Resolve IAuthService từ IUnitOfWork."""
@@ -84,7 +82,7 @@ async def Token(form_data: OAuth2PasswordRequestForm = Depends(),
 # -------- Current user self endpoints --------
 
 
-@self_router.get("/me")
+@router.get("/me")
 async def GetMe(
     service: IUserService = Depends(GetUserService),
     current_user: UserDto = Depends(GetCurrentUser),
@@ -101,7 +99,7 @@ async def GetMe(
     return Ok(profile)
 
 
-@self_router.get("/me/roles")
+@router.get("/me/roles")
 async def GetMyRoles(
     service: IUserService = Depends(GetUserService),
     current_user: UserDto = Depends(GetCurrentUser),
@@ -116,7 +114,7 @@ async def GetMyRoles(
     return Ok(roles)
 
 
-@self_router.get("/me/permissions")
+@router.get("/me/permissions")
 async def GetMyPermissions(
     service: IUserService = Depends(GetUserService),
     current_user: UserDto = Depends(GetCurrentUser),
@@ -131,7 +129,7 @@ async def GetMyPermissions(
     return Ok(perms)
 
 
-@self_router.put("/me/roles")
+@router.put("/me/roles")
 async def UpdateMyRoles(
     request: UserRolesUpdateDto,
     service: IUserService = Depends(GetUserService),
@@ -156,7 +154,7 @@ async def UpdateMyRoles(
     return Ok(updated)
 
 
-@self_router.put("/me/password")
+@router.put("/me/password")
 async def ChangeMyPassword(
     request: ChangePasswordDto,
     service: IUserService = Depends(GetUserService),
